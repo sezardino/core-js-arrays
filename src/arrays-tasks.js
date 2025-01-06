@@ -324,11 +324,13 @@ function calculateBalance(arr) {
  *    createChunks([10, 20, 30, 40, 50], 1) => [[10], [20], [30], [40], [50]]
  */
 function createChunks(arr, chunkSize) {
-  const result = [];
-  for (let i = 0; i < arr.length; i += chunkSize) {
-    result.push(arr.slice(i, i + chunkSize));
-  }
-  return result;
+  return arr.reduce((chunks, item, index) => {
+    if (index % chunkSize === 0) {
+      chunks.push([]); // Начинаем новый chunk
+    }
+    chunks[chunks.length - 1].push(item); // Добавляем элемент в последний chunk
+    return chunks;
+  }, []);
 }
 
 /**
@@ -344,11 +346,7 @@ function createChunks(arr, chunkSize) {
  *    generateOdds(5) => [ 1, 3, 5, 7, 9 ]
  */
 function generateOdds(len) {
-  const result = [];
-  for (let i = 0; i < len; i += 1) {
-    result.push(2 * i + 1);
-  }
-  return result;
+  return Array.from({ length: len }, (_, i) => 2 * i + 1);
 }
 
 /**
@@ -428,7 +426,14 @@ function getIndicesOfOddNumbers(numbers) {
  *    getHexRGBValues([]) => []
  */
 function getHexRGBValues(arr) {
-  return arr.map((num) => `#${num.toString(16).padStart(6, '0')}`);
+  return arr.map((num) => {
+    const r = Math.floor(num / (256 * 256));
+    const g = Math.floor((num % (256 * 256)) / 256);
+    const b = num % 256;
+    return `#${r.toString(16).padStart(2, '0')}${g
+      .toString(16)
+      .padStart(2, '0')}${b.toString(16).padStart(2, '0')}`.toUpperCase();
+  });
 }
 
 /**
@@ -477,15 +482,13 @@ function findCommonElements(arr1, arr2) {
  *    findLongestIncreasingSubsequence([50, 3, 10, 7, 40, 80]) => longest is [7, 40, 80] => 3
  */
 function findLongestIncreasingSubsequence(nums) {
-  const lengths = Array(nums.length).fill(1);
+  const lengths = nums.reduce((acc, num, i) => {
+    acc[i] = acc.slice(0, i).reduce((max, len, j) => {
+      return nums[j] < num ? Math.max(max, len + 1) : max;
+    }, 1);
+    return acc;
+  }, Array(nums.length).fill(1));
 
-  for (let i = 1; i < nums.length; i + 1) {
-    for (let j = 0; j < i; j + 1) {
-      if (nums[i] > nums[j]) {
-        lengths[i] = Math.max(lengths[i], lengths[j] + 1);
-      }
-    }
-  }
   return Math.max(...lengths);
 }
 
@@ -523,9 +526,10 @@ function propagateItemsByPositionIndex(arr) {
  *    shiftArray([10, 20, 30, 40, 50], -3) => [40, 50, 10, 20, 30]
  */
 function shiftArray(arr, n) {
+  if (arr.length === 0) return arr; // Пустой массив остаётся пустым
   const { length } = arr;
-  const shift = ((n % length) + length) % length; // handles negative shifts and large n values
-  return arr.slice(shift).concat(arr.slice(0, shift));
+  const shift = ((n % length) + length) % length; // Обработать отрицательные и большие n
+  return arr.slice(-shift).concat(arr.slice(0, -shift));
 }
 
 /**
